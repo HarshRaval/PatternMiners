@@ -1,4 +1,4 @@
-package com.pattern.miners;
+package com.patternminers;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -9,45 +9,43 @@ import java.util.Collections;
 public class Clustering {
 	CheckQuerySimilarity cq = new CheckQuerySimilarity();
 
-	public void performProductClustering(String productCSV){
+	public void performProductClustering(String productCSV) {
 		ArrayList<Product> products = new ArrayList<Product>();
-		try{
+		try {
 			FileReader fReader = new FileReader(productCSV);
 			BufferedReader bReader = new BufferedReader(fReader);
 			String line = bReader.readLine();
-			while((line = bReader.readLine()) != null){
+			while ((line = bReader.readLine()) != null) {
 				String[] columns = line.split(",");
 				Product p = new Product(Long.parseLong(columns[0]), columns[2]);
 				products.add(p);
 			}
 			bReader.close();
 			fReader.close();
-		}
-		catch(IOException ioe){
+		} catch (IOException ioe) {
 			ioe.printStackTrace();
-		}
-		catch(Exception exp){
+		} catch (Exception exp) {
 			exp.printStackTrace();
 		}
-		
-		for(Product p : products){
+
+		for (Product p : products) {
 			getSimilarProducts(p, products);
 		}
 	}
-	
-	public void getSimilarProducts(Product p, ArrayList<Product> prods){
+
+	public void getSimilarProducts(Product p, ArrayList<Product> prods) {
 		ArrayList<Long> hsSKU = new ArrayList<Long>();
-		for(Product tp : prods){
+		for (Product tp : prods) {
 			String checkStr = tp.getName().replaceAll("xbox|360", "");
 			String str = p.getName().replaceAll("xbox|360", "");
-			if(cq.getDistance(str, checkStr) > 0.65){
-				if(!hsSKU.contains(tp.getSkuID())){
+			if (cq.getDistance(str, checkStr) > 0.65) {
+				if (!hsSKU.contains(tp.getSkuID())) {
 					hsSKU.add(tp.getSkuID());
 				}
-				//System.out.println(name+ " & " +checkStr);;
+				// System.out.println(name+ " & " +checkStr);;
 			}
 		}
 		Collections.sort(hsSKU);
-		//System.out.println(p.getSkuID()+ " = " +hsSKU.toString());
+		// System.out.println(p.getSkuID()+ " = " +hsSKU.toString());
 	}
 }

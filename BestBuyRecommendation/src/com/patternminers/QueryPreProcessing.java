@@ -8,61 +8,75 @@ import java.util.Arrays;
 import java.util.HashSet;
 
 public class QueryPreProcessing {
-	
-	public void preProcessQuery(String fileName, String outFile, int queryCol){
-		//HashSet for storing all the stop-words
+	WordCleaner wc = new WordCleaner();
+
+	public void preProcessQuery(String fileName, String outFile, int queryCol,
+			HashSet<String> prodWords) {
+		// HashSet for storing all the stop-words
 		HashSet<String> stopwordsSet = new HashSet<String>();
 		String stopwordFile = "xbox/stopwords.txt";
 		FileReader fReader;
 		BufferedReader bReader;
-		try{
+		try {
 			fReader = new FileReader(stopwordFile);
 			bReader = new BufferedReader(fReader);
 			String line = null;
-			while((line = bReader.readLine()) != null){
-				//Adding new stop-words into the HashSet
-				if(stopwordsSet.contains(line)){
+			while ((line = bReader.readLine()) != null) {
+				// Adding new stop-words into the HashSet
+				if (stopwordsSet.contains(line)) {
 					continue;
 				}
 				stopwordsSet.add(line);
 			}
 			bReader.close();
 			fReader.close();
-		}
-		catch(Exception exp){
+		} catch (Exception exp) {
 			exp.printStackTrace();
 			System.exit(1);
 		}
-		//Performing all pre-processing activities after after passing the HashSet of stop-words and stop-word file
-		preProcessQueryHelper(fileName, stopwordsSet, outFile, queryCol);
+
+		// Performing all pre-processing activities after after passing the
+		// HashSet of stop-words and stop-word file
+		preProcessQueryHelper(fileName, stopwordsSet, outFile, queryCol,
+				prodWords);
 	}
-	
-	private void preProcessQueryHelper(String fileName, HashSet<String> stopwordsSet, String outFile, int queryCol){
-		try{
+
+	private void preProcessQueryHelper(String fileName,
+			HashSet<String> stopwordsSet, String outFile, int queryCol,
+			HashSet<String> prodWords) {
+		try {
 			FileReader qFileReader = new FileReader(fileName);
 			BufferedReader qBuffReader = new BufferedReader(qFileReader);
 			FileWriter fWriter = new FileWriter(outFile);
 			PrintWriter pWriter = new PrintWriter(fWriter);
 			String line = null;
-			while((line = qBuffReader.readLine()) != null){
-				//Split the query into words and store into string array
+			while ((line = qBuffReader.readLine()) != null) {
+				// Split the query into words and store into string array
 				String[] columns = line.split(",");
-				//Query is present at the index 3 of the string array
-				String temp = columns[queryCol];
-				//System.out.println(temp);
-				//Calling helper function for removing special characters
-				temp = removeSpecialCharacters(temp);
-				//Converting the query into lower case
-				temp = temp.toLowerCase();
-				//Helper function for removing the stop-words and sorting all words 
-				temp = removeStopWordsAndSort(temp, stopwordsSet);
-				//System.out.println(temp);
 
-				for(int i = 0; i < columns.length; i++){
-					if(i == queryCol){
+				// Query is present at the index 3 of the string array
+				String temp = columns[queryCol];
+				// System.out.println(temp);
+
+				// Calling helper function for removing special characters
+				temp = removeSpecialCharacters(temp);
+
+				// Converting the query into lower case
+				temp = temp.toLowerCase();
+
+				// Helper function for removing the stop-words and sorting all
+				// words
+				temp = removeStopWordsAndSort(temp, stopwordsSet);
+
+				// Helper function for correcting the query words as per the
+				// product XML file provided
+				temp = wc.matchQueryWordToProduct(temp, prodWords);
+				// System.out.println(temp);
+
+				for (int i = 0; i < columns.length; i++) {
+					if (i == queryCol) {
 						pWriter.print(temp + ",");
-					}
-					else{
+					} else {
 						pWriter.print(columns[i] + ",");
 					}
 				}
@@ -72,25 +86,25 @@ public class QueryPreProcessing {
 			fWriter.close();
 			qBuffReader.close();
 			qFileReader.close();
-		}
-		catch(Exception exp){
+		} catch (Exception exp) {
 			exp.printStackTrace();
 			System.exit(1);
 		}
 	}
-	
-	private String removeStopWordsAndSort(String query, HashSet<String> stopwordsSet){
+
+	private String removeStopWordsAndSort(String query,
+			HashSet<String> stopwordsSet) {
 		String[] splitQuery = query.split(" ");
 		Arrays.sort(splitQuery);
-		
+
 		StringBuilder sb = new StringBuilder();
-		for(String str: splitQuery){
-			//Performing stemming of individual word
-			/*Stemmer st = new Stemmer();
-			st.add(str.toCharArray(), str.length());
-			st.stem();
-			str = st.toString();*/ 
-			if(stopwordsSet.contains(str) == true){
+		for (String str : splitQuery) {
+			// Performing stemming of individual word
+			/*
+			 * Stemmer st = new Stemmer(); st.add(str.toCharArray(),
+			 * str.length()); st.stem(); str = st.toString();
+			 */
+			if (stopwordsSet.contains(str) == true) {
 				continue;
 			}
 			sb.append(str);
@@ -100,11 +114,12 @@ public class QueryPreProcessing {
 	}
 
 	/*
-	 * This function is used for replacing all the special characters found within a string by a space character
-	 * It takes a string as an input and replaces all the special characters provided within the regular expression
-	 * by a space and returns the string back
+	 * This function is used for replacing all the special characters found
+	 * within a string by a space character It takes a string as an input and
+	 * replaces all the special characters provided within the regular
+	 * expression by a space and returns the string back
 	 */
-	private String removeSpecialCharacters(String temp){
+	private String removeSpecialCharacters(String temp) {
 		temp = temp.replaceAll("[()?:!\"._,;-]+", " ");
 		return temp.trim();
 	}
