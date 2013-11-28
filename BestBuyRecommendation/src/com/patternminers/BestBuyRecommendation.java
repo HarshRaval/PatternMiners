@@ -1,6 +1,11 @@
 package com.patternminers;
 
+import java.io.IOException;
 import java.util.HashSet;
+
+import com.patternminers.tfidf.TfIdfCalculator;
+
+import uk.ac.shef.wit.simmetrics.similaritymetrics.CosineSimilarity;
 
 /*
  * This is the MainClass file which calls other helper files for performing the Recommendation Tasks
@@ -48,27 +53,33 @@ public class BestBuyRecommendation {
 		 * queries so that we can eliminate noise such as spelling mistakes and
 		 * incomplete words that can be entered by user
 		 */
-		/*
-		 * GenerateProductCSV prod = new GenerateProductCSV(); prodWords =
-		 * prod.generateCSVFromXML(productXML, productCSV);
-		 * System.out.println("Completed generating CSV for Product");
-		 * 
-		 * QueryPreProcessing qp = new QueryPreProcessing();
-		 * qp.preProcessQuery(train, trainModified, 3, prodWords);
-		 * System.out.println("Completed Processing Training Files");
-		 * qp.preProcessQuery(test, testModified, 2, prodWords);
-		 * System.out.println("Completed Processing Test Files");
-		 */}
-
-	public void performClustering() {
-		Clustering qc = new Clustering();
-		qc.performProductClustering(productCSV);
-
-		CheckQuerySimilarity c = new CheckQuerySimilarity();
+		
+		 GenerateProductCSV prod = new GenerateProductCSV(); prodWords =
+		 prod.generateCSVFromXML(productXML, productCSV);
+		 System.out.println("Completed generating CSV for Product");
+		 
+		 QueryPreProcessing qp = new QueryPreProcessing();
+		 qp.preProcessQuery(train, trainModified, 3, prodWords);
+		 System.out.println("Completed Processing Training Files");
+		 qp.preProcessQuery(test, testModified, 2, prodWords);
+		 System.out.println("Completed Processing Test Files");
 	}
 
-	public void runRecommendation(String answers) {
-		System.out.println("Solution File Generated");
+	public void performClustering() throws IOException {
+		KMeanClustering km = new KMeanClustering();
+		km.kMeanClustering();
+		System.out.println("Completed Clustering for Product");
+	}
+
+	public void runRecommendation(String tfidfAnswers, String queryAnswers) throws Exception {
+		Main main = new Main();
+		String args[] = {productXML, train, test, tfidfAnswers};
+		main.TFIDFAlog(args);
+		System.out.println("TFIDF Done");
+		Mapping m = new Mapping();
+		String arguments[] = {trainModified, testModified, queryAnswers};
+		m.QueryAlgo(arguments);
+		System.out.println("Query collab Done");
 	}
 
 	public static void main(String[] args) throws Exception {
@@ -77,15 +88,16 @@ public class BestBuyRecommendation {
 		String trainModified = "xbox/train_modified.csv";
 		String test = "xbox/test.csv";
 		String testModified = "xbox/test_modified.csv";
-		String answers = "xbox/answers.csv";
+		String tfidfAnswers = "xbox/tfidfAnswers.csv";
+		String queryAnswers = "xbox/queryAnswers.csv";
 		String productXML = "xbox/small_product_data.xml";
 		String productCSV = "xbox/product.csv";
 
 		BestBuyRecommendation bbr = new BestBuyRecommendation(train,
 				trainModified, test, testModified, productXML, productCSV);
-		bbr.preProcessing();
+		//bbr.preProcessing();
 		bbr.performClustering();
-		bbr.runRecommendation(answers);
+		bbr.runRecommendation(tfidfAnswers, queryAnswers);
 		long endTime = System.currentTimeMillis();
 		System.out.println("Time of execution in seconds = "
 				+ (endTime - startTime) / 1000);

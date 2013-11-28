@@ -24,14 +24,18 @@ public class WordCleaner {
 		String[] oldQueryArray = oldQuery.split(" ");
 		// System.out.println(oldQuery);
 		StringBuilder sb = new StringBuilder();
-		for (String word : oldQueryArray) {
-			if (isNumeric(word) || word.equals(" ")) {
-				sb.append(word);
+		for (int i = 0 ; i < oldQueryArray.length; i ++) {
+			if (isNumeric(oldQueryArray[i]) || oldQueryArray[i].equals(" ")) {
+				sb.append(oldQueryArray[i]);
 			} else {
-				word = correctWord(word.trim(), prodWords);
-				sb.append(word);
+				oldQueryArray[i]= correctWord(oldQueryArray[i].trim(), prodWords);
+				if(oldQueryArray[i]== null){
+					oldQueryArray[i]= "";
+				}
+				sb.append(oldQueryArray[i]);
 			}
-			sb.append(" ");
+			if(i != oldQueryArray.length-1)
+				sb.append(" ");
 		}
 		// System.out.println(sb.toString());
 		return sb.toString();

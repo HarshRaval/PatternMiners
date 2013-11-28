@@ -55,7 +55,7 @@ public class QueryPreProcessing {
 				String[] columns = line.split(",");
 
 				// Query is present at the index 3 of the string array
-				String temp = columns[queryCol];
+				String temp = columns[queryCol].trim();
 				// System.out.println(temp);
 
 				// Calling helper function for removing special characters
@@ -75,8 +75,11 @@ public class QueryPreProcessing {
 
 				for (int i = 0; i < columns.length; i++) {
 					if (i == queryCol) {
-						pWriter.print(temp + ",");
-					} else {
+						pWriter.print("\""+ temp + "\"" + ",");
+					} else if(i == columns.length-1) {
+						pWriter.print(columns[i]);
+					}
+					else {
 						pWriter.print(columns[i] + ",");
 					}
 				}
@@ -98,17 +101,18 @@ public class QueryPreProcessing {
 		Arrays.sort(splitQuery);
 
 		StringBuilder sb = new StringBuilder();
-		for (String str : splitQuery) {
+		for (int i=0; i < splitQuery.length; i++) {
 			// Performing stemming of individual word
 			/*
 			 * Stemmer st = new Stemmer(); st.add(str.toCharArray(),
 			 * str.length()); st.stem(); str = st.toString();
 			 */
-			if (stopwordsSet.contains(str) == true) {
+			if (stopwordsSet.contains(splitQuery[i]) == true) {
 				continue;
 			}
-			sb.append(str);
-			sb.append(" ");
+			sb.append(splitQuery[i]);
+			if(i != splitQuery.length-1)
+				sb.append(" ");
 		}
 		return sb.toString();
 	}
@@ -120,7 +124,8 @@ public class QueryPreProcessing {
 	 * expression by a space and returns the string back
 	 */
 	private String removeSpecialCharacters(String temp) {
-		temp = temp.replaceAll("[()?:!\"._,;-]+", " ");
+		temp = temp.replaceAll("[()\'?:!/\"._,;-]+", " ");
+		//temp = temp.replaceAll("[0-9]", "");
 		return temp.trim();
 	}
 }
