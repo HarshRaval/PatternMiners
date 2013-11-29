@@ -92,6 +92,8 @@ if __name__ == '__main__':
     #print filenames
     args = sys.argv[2:]
     args = os.listdir('xbox/files1')
+    if not os.path.isfile("xbox/cluster_train.txt"):
+        target = open("xbox/cluster_train.txt", 'w')
     target = open("xbox/cluster_train.txt", 'a')
     #print args
     for a in args:

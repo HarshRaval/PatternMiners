@@ -67,10 +67,11 @@ public class QueryPreProcessing {
 				// Helper function for removing the stop-words and sorting all
 				// words
 				temp = removeStopWordsAndSort(temp, stopwordsSet);
-
+				
 				// Helper function for correcting the query words as per the
 				// product XML file provided
 				temp = wc.matchQueryWordToProduct(temp, prodWords);
+
 				// System.out.println(temp);
 
 				for (int i = 0; i < columns.length; i++) {

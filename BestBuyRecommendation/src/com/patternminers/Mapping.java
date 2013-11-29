@@ -87,38 +87,39 @@ public class Mapping {
 			BufferedReader bReader = new BufferedReader(
 					new FileReader(testFile));
 			BufferedWriter bWriter = new BufferedWriter(new FileWriter(args[2]));
-			String line;
+			String line = bReader.readLine();
 			while ((line = bReader.readLine()) != null) {
 				String[] lineArray = line.split(",");
-				String query = lineArray[2].trim();
+				String query = lineArray[2].trim().substring(1,
+						lineArray[2].length() - 1);
 				String centroid = getCentroid(query, cluster);
 				ArrayList<String> finalList = new ArrayList<String>();
 				if (centroid == null) {
 					finalList = getPopularSkus(5, finalList);
 				} else {
 					ArrayList<String> sList = getSkuList(centroid, cluster,
-							qSkuMap);
-					HashMap<String, Integer> countMap = getSkuCount(sList,
+							qSkuMap, query);
+					LinkedHashMap<String, Integer> countMap = getSkuCount(sList,
 							skuMap);
-					Map<String, Integer> sortedMapDesc = sortByComparator(
-							countMap, false);
+					/*Map<String, Integer> sortedMapDesc = sortByComparator(
+							countMap, false);*/
 					int size = countMap.size();
 					if (size > 5) {
 						int i = 0;
-						for (String s : sortedMapDesc.keySet()) {
+						for (String s : countMap.keySet()) {
 							finalList.add(s);
 							i++;
 							if (i == 5)
 								break;
 						}
 					} else if (size < 5) {
-						for (String s : sortedMapDesc.keySet()) {
+						for (String s : countMap.keySet()) {
 							finalList.add(s);
 						}
 						finalList = getPopularSkus(5 - size, finalList);
 
 					} else {
-						for (String s : sortedMapDesc.keySet()) {
+						for (String s : countMap.keySet()) {
 							finalList.add(s);
 						}
 					}
@@ -137,9 +138,9 @@ public class Mapping {
 		}
 	}
 
-	private static HashMap<String, Integer> getSkuCount(
+	private static LinkedHashMap<String, Integer> getSkuCount(
 			ArrayList<String> sList, HashMap<String, Integer> skuMap) {
-		HashMap<String, Integer> countMap = new HashMap<String, Integer>();
+		LinkedHashMap<String, Integer> countMap = new LinkedHashMap<String, Integer>();
 		for (String s : sList) {
 			Integer count = skuMap.get(s);
 			countMap.put(s, count);
@@ -149,12 +150,17 @@ public class Mapping {
 
 	private static ArrayList<String> getSkuList(String centroid,
 			HashMap<String, ArrayList<String>> cluster,
-			HashMap<String, ArrayList<String>> qSkuMap) {
+			HashMap<String, ArrayList<String>> qSkuMap, String query) {
 		ArrayList<String> sList = new ArrayList<String>();
 		ArrayList<String> qList = cluster.get(centroid);
+		HashMap<String, Float> dist = new HashMap<String, Float>();
 		for (String q : qList) {
-			ArrayList<String> list = qSkuMap.get(q);
-			if (list != null) {
+			dist.put(q, new Levenshtein().getSimilarity(query, q));
+		}
+		Map<String, Float> sortedMapDesc = sortByComparatorFloat(dist, false);
+		for (Entry<String, Float> entry : sortedMapDesc.entrySet()) {
+			ArrayList<String> list = qSkuMap.get(entry.getKey());
+			if (list != null && entry.getValue() > 0.6) {
 				for (String s : list) {
 					if (!sList.contains(s))
 						sList.add(s);
@@ -182,7 +188,7 @@ public class Mapping {
 			cDist.put(cent, new Levenshtein().getSimilarity(query, cent));
 		}
 		Map<String, Float> sortedMapDesc = sortByComparatorFloat(cDist, false);
-		for(String s : sortedMapDesc.keySet()){
+		for (String s : sortedMapDesc.keySet()) {
 			centroid = s;
 			break;
 		}
@@ -216,7 +222,7 @@ public class Mapping {
 
 		return sortedMap;
 	}
-	
+
 	private static Map<String, Float> sortByComparatorFloat(
 			Map<String, Float> unsortMap, final boolean order) {
 		List<Entry<String, Float>> list = new LinkedList<Entry<String, Float>>(
@@ -224,8 +230,7 @@ public class Mapping {
 
 		// Sorting the list based on values
 		Collections.sort(list, new Comparator<Entry<String, Float>>() {
-			public int compare(Entry<String, Float> o1,
-					Entry<String, Float> o2) {
+			public int compare(Entry<String, Float> o1, Entry<String, Float> o2) {
 				if (order) {
 					return o1.getValue().compareTo(o2.getValue());
 				} else {
